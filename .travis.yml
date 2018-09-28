@@ -16,7 +16,7 @@ matrix:
 branches:
   only:
   - master
-  - /^release-.*/
+  - /^m-.*$/
 
 install:
   - npm uninstall typescript --no-save
