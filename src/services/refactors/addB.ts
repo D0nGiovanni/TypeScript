@@ -45,7 +45,8 @@ namespace ts.refactor.addB {
 
         if (actionName == invokeName){            
             newFun.type = createKeywordTypeNode(SyntaxKind.StringKeyword);
-            const secretStr = createStringLiteral("	      _                        \n	      \`*-.                    \n	       )  _`-.                 \n	      .  : `. .                \n	      : _   '  \               \n	      ; *` _.   `*-._          \n	      `-.-'          `-.       \n		;       `       `.     \n		:.       .        \    \n		. \  .   :   .-'   .   \n		'  `+.;  ;  '      :   \n		:  '  |    ;       ;-. \n		; '   : :`-:     _.`* ;\n	[bug] .*' /  .*' ; .*`- +'  `*'\n	     `*-*   `*-*  `*-*'        \n")
+      //      const secretStr = createStringLiteral("	      _                        \n	      \`*-.                    \n	       )  _`-.                 \n	      .  : `. .                \n	      : _   '  \               \n	      ; *` _.   `*-._          \n	      `-.-'          `-.       \n		;       `       `.     \n		:.       .        \    \n		. \  .   :   .-'   .   \n		'  `+.;  ;  '      :   \n		:  '  |    ;       ;-. \n		; '   : :`-:     _.`* ;\n	[bug] .*' /  .*' ; .*`- +'  `*'\n	     `*-*   `*-*  `*-*'        \n")
+            const secretStr = createStringLiteral("Meow")
             const returnStatement = createReturn(secretStr);
             newFun.body = createBlock([returnStatement],true);;
         }
