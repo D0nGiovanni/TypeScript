@@ -1,11 +1,11 @@
 /* @internal */
 namespace ts.refactor.addB {
     const refactorName = "Kitty enchantment";
-    const refactorDescription = "Kitty enchantment";
+    const refactorDescription = Diagnostics.Kitty_enchantment.message;
     const invokeName = "Invoke kitty";
     const vanishName = "Vanish kitty";
-    const invokeDescription = "Invoke kitty";
-    const vanishDescription = "Vanish kitty";
+    const invokeDescription = Diagnostics.Invoke_kitty.message;
+    const vanishDescription = Diagnostics.Vanish_kitty.message;
     registerRefactor(refactorName, { getEditsForAction, getAvailableActions });
 
     interface Info{

@@ -4687,5 +4687,18 @@
     "Generate types for all packages without types": {
         "category": "Message",
         "code": 95068
+    },
+    "Kitty enchantment": {
+        "category": "Message",
+        "code": 95069
+    },
+    "Invoke kitty": {
+        "category": "Message",
+        "code": 95070
+    },
+    "Vanish kitty": {
+        "category": "Message",
+        "code": 95071
     }
+
 }
