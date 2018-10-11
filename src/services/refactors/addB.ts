@@ -8,7 +8,7 @@ namespace ts.refactor.addB {
     const vanishDescription = Diagnostics.Vanish_kitty.message;
     registerRefactor(refactorName, { getEditsForAction, getAvailableActions });
 
-    interface Info{
+    interface Info {
         fun: FunctionDeclaration;
         bodyEmpty: Boolean;
     }
@@ -22,11 +22,11 @@ namespace ts.refactor.addB {
             name: refactorName,
             description: refactorDescription,
             actions: [
-                    info.bodyEmpty ? 
+                    info.bodyEmpty ?
                     {
                         name: invokeName,
                         description: invokeDescription
-                    }:
+                    } :
                     {
                         name: vanishName,
                         description: vanishDescription
@@ -41,19 +41,18 @@ namespace ts.refactor.addB {
         if (!info) return undefined;
 
         const {fun} = info;
-        let newFun: FunctionDeclaration = {...fun};
+        const newFun: FunctionDeclaration = { ...fun };
 
-        if (actionName == invokeName){            
+        if (actionName === invokeName) {
             newFun.type = createKeywordTypeNode(SyntaxKind.StringKeyword);
-      //      const secretStr = createStringLiteral("	      _                        \n	      \`*-.                    \n	       )  _`-.                 \n	      .  : `. .                \n	      : _   '  \               \n	      ; *` _.   `*-._          \n	      `-.-'          `-.       \n		;       `       `.     \n		:.       .        \    \n		. \  .   :   .-'   .   \n		'  `+.;  ;  '      :   \n		:  '  |    ;       ;-. \n		; '   : :`-:     _.`* ;\n	[bug] .*' /  .*' ; .*`- +'  `*'\n	     `*-*   `*-*  `*-*'        \n")
-            const secretStr = createStringLiteral("Meow")
+            const secretStr = createStringLiteral("Meow");
             const returnStatement = createReturn(secretStr);
-            newFun.body = createBlock([returnStatement],true);;
+            newFun.body = createBlock([returnStatement], /* multiline */ true);
         }
-        else if (actionName == vanishName){
+        else if (actionName === vanishName) {
             newFun.type = createKeywordTypeNode(SyntaxKind.VoidKeyword);
-            newFun.body = createBlock([],false);
-        }  
+            newFun.body = createBlock([]);
+        }
         else {
             Debug.fail("invalid action");
         }
@@ -62,17 +61,17 @@ namespace ts.refactor.addB {
         return { renameFilename: undefined, renameLocation: undefined, edits };
     }
 
-    function isApplicable(file: SourceFile, startPosition: number): Info | undefined{
+    function isApplicable(file: SourceFile, startPosition: number): Info | undefined {
         const node = getTokenAtPosition(file, startPosition);
         const maybeFun = getContainingFunction(node);
-        
-        if(!maybeFun || !isFunctionDeclaration(maybeFun) || maybeFun.name == undefined || !maybeFun.name.text.startsWith("cat") ) return undefined;
 
-        let empty = (maybeFun.body == undefined ||  maybeFun.body.statements.length == 0) 
-        
+        if (!maybeFun || !isFunctionDeclaration(maybeFun) || maybeFun.name === undefined || !maybeFun.name.text.startsWith("cat")) return undefined;
+
+        const empty = (maybeFun.body === undefined || maybeFun.body.statements.length === 0);
+
         return {
             fun: maybeFun,
             bodyEmpty: empty,
-        }
+        };
     }
 }

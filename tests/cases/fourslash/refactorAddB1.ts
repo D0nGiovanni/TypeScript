@@ -1,6 +1,6 @@
 /// <reference path='fourslash.ts' />
 
-//// function /*a*/catTheGreat()/*b*/: void { };
+//// function /*a*/catTheGreat()/*b*/: void { }
 
 goTo.select("a", "b");
 edit.applyRefactor({
@@ -9,5 +9,5 @@ edit.applyRefactor({
     actionDescription: "Invoke kitty",
     newContent: `function catTheGreat(): string {
     return "Meow";
-};`,
+}`,
 });
