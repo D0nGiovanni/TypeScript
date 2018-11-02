@@ -4720,5 +4720,13 @@
     "Generate types for all packages without types": {
         "category": "Message",
         "code": 95068
+    },
+    "Kittify to '{0}'": {
+        "category": "Message",
+        "code": 95069
+    },
+    "Kittify all detected": {
+        "category": "Message",
+        "code": 95070
     }
 }
