@@ -4721,11 +4721,11 @@
         "category": "Message",
         "code": 95068
     },
-    "Kittify to '{0}'": {
+    "Korrectify to '{0}'": {
         "category": "Message",
         "code": 95069
     },
-    "Kittify all detected": {
+    "Korrectify all detected misspellings": {
         "category": "Message",
         "code": 95070
     }
