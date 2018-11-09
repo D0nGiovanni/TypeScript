@@ -9,6 +9,7 @@ namespace ts.codefix {
             const { program, sourceFile, span } = context;
             const classDeclaration = getClass(sourceFile, span.start);
             const checker = program.getTypeChecker();
+                   // Array[Input] --map--> Array[Output]               // getAllInterfaces                                           // interface
             return mapDefined<ExpressionWithTypeArguments, CodeFixAction>(getClassImplementsHeritageClauseElements(classDeclaration), implementedTypeNode => {
                 const changes = textChanges.ChangeTracker.with(context, t => addMissingDeclarations(checker, implementedTypeNode, sourceFile, classDeclaration, t, context.preferences));
                 return changes.length === 0 ? undefined : createCodeFixAction(fixId, changes, [Diagnostics.Implement_interface_0, implementedTypeNode.getText(sourceFile)], fixId, Diagnostics.Implement_all_unimplemented_interfaces);
@@ -44,15 +45,20 @@ namespace ts.codefix {
         changeTracker: textChanges.ChangeTracker,
         preferences: UserPreferences,
     ): void {
+        // unklar
         const maybeHeritageClauseSymbol = getHeritageClauseSymbolTable(classDeclaration, checker);
         // Note that this is ultimately derived from a map indexed by symbol names,
         // so duplicates cannot occur.
+        // interface
         const implementedType = checker.getTypeAtLocation(implementedTypeNode) as InterfaceType;
+        // members of interface
         const implementedTypeSymbols = checker.getPropertiesOfType(implementedType);
+        // assumption: get notimplemented members
         const nonPrivateAndNotExistedInHeritageClauseMembers = implementedTypeSymbols.filter(and(symbolPointsToNonPrivateMember, symbol => !maybeHeritageClauseSymbol.has(symbol.escapedName)));
 
         const classType = checker.getTypeAtLocation(classDeclaration);
 
+        // it implements indexers if class does not have?
         if (!classType.getNumberIndexType()) {
             createMissingIndexSignatureDeclaration(implementedType, IndexKind.Number);
         }
@@ -60,6 +66,8 @@ namespace ts.codefix {
             createMissingIndexSignatureDeclaration(implementedType, IndexKind.String);
         }
 
+        // effective Magic: create missing Member 
+        // and also add in symbolTable
         createMissingMemberNodes(classDeclaration, nonPrivateAndNotExistedInHeritageClauseMembers, checker, preferences, member => changeTracker.insertNodeAtClassStart(sourceFile, classDeclaration, member));
 
         function createMissingIndexSignatureDeclaration(type: InterfaceType, kind: IndexKind): void {
