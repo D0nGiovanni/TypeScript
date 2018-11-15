@@ -4768,5 +4768,9 @@
     "Inline all": {
         "category": "Message",
         "code": 95072
+    },
+    "Inline function": {
+        "category": "Message",
+        "code": 95073
     }
 }
