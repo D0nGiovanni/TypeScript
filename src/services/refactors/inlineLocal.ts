@@ -63,7 +63,7 @@ namespace ts.refactor.inlineLocal {
 
     function createInfo(checker: TypeChecker, declaration: VariableDeclaration, token?: Identifier): Info | undefined {
         const name = declaration.name;
-        const usages = getReferencesInScope(getEnclosingBlockScopeContainer(name), name, checker);
+        const usages = getReferencesInScope(getEnclosingBlockScopeContainer(name), name, checker, /* withDeclaration */ false);
         return canInline(declaration, usages) ? {
             declaration,
             usages,
@@ -157,16 +157,23 @@ namespace ts.refactor.inlineLocal {
         return expression;
     }
 
-    function getReferencesInScope(scope: Node, target: Node, checker: TypeChecker): ReadonlyArray<Identifier> {
+    function getReferencesInScope(scope: Node, target: Node, checker: TypeChecker, withDeclaration: boolean): ReadonlyArray<Identifier> {
+        const symbol = checker.getSymbolAtLocation(target);
+        return findDescendants(scope, n =>
+            checker.getSymbolAtLocation(n) === symbol &&
+            (withDeclaration || !isDeclaration(n.parent))) as Identifier[];
+    }
+
+    function findDescendants(node: Node, predicate: (n: Node) => boolean) {
         const nodes: Node[] = [];
-        function getNodes(node: Node) {
+        visitDescendants(node);
+
+        function visitDescendants(node: Node) {
             forEachChild(node, n => {
-                nodes.push(n);
-                getNodes(n);
+                if (predicate(n)) nodes.push(n);
+                visitDescendants(n);
             });
         }
-        getNodes(scope);
-        const symbol = checker.getSymbolAtLocation(target);
-        return nodes.filter(n => checker.getSymbolAtLocation(n) === symbol && !isVariableDeclaration(n.parent)) as Identifier[];
+        return nodes;
     }
 }
