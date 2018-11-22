@@ -22,13 +22,22 @@ namespace ts.refactor.inlineFunction {
         const { program, file, startPosition } = context;
         const info = getInfo(program, file, startPosition);
         if (!info) return emptyArray;
-        const { selectedUsage } = info;
+        const { selectedUsage, /* declaration, usages */ } = info;
+        // const checker = program.getTypeChecker();
+        // const sourceSymbols = checker.getSymbolsInScope(declaration, SymbolFlags.All);
+        // const symbols = checker.getSymbolsInScope(usages[0], SymbolFlags.All);
+        // const localSymbols = filter(sourceSymbols, s =>
+        //     s.valueDeclaration &&
+        //     getEnclosingBlockScopeContainer(s.valueDeclaration) === declaration &&
+        //     isNamedDeclaration(s.valueDeclaration) &&
+        //     isIdentifier(s.valueDeclaration.name) &&
+        //     !!nameIsTaken(symbols, s.valueDeclaration.name.text, s));
         const refactorInfo = {
             name: refactorName,
             description: refactorDescription,
             actions: [{
                 name: inlineAllActionName,
-                description: inlineAllActionDescription
+                description: inlineAllActionDescription/*  + ": " + getUniqueName((<any>localSymbols[0].valueDeclaration).name!.text, file) */
             }]
         };
         if (selectedUsage) {
@@ -157,7 +166,7 @@ namespace ts.refactor.inlineFunction {
             }
         });
 
-        /* body = */ collectConflictingNames(declaration.body!) /* as Block */;
+        /* body = */ collectConflictingNames(declaration) /* as Block */;
         body = getSynthesizedDeepCloneWithRenames(body, /* includeTrivia */ true, renameMap, checker);
         forEach(body.statements, st => {
             if (!isReturnStatement(st)) {
@@ -175,9 +184,13 @@ namespace ts.refactor.inlineFunction {
             const localSymbols = filter(sourceSymbols, s => s.valueDeclaration && getEnclosingBlockScopeContainer(s.valueDeclaration) === node);
             forEach(localSymbols, s => {
                 const declaration = s.valueDeclaration;
-                if (!isNamedDeclaration(declaration)) return;
+                if (!declaration || !isNamedDeclaration(declaration)) return;
                 if (!isIdentifier(declaration.name)) return;
-                getSafeName(declaration.name);
+                const name = declaration.name.text;
+                if (nameIsTaken(symbols, name, s)) {
+                    const safeName = createIdentifier(getUniqueName(name, file));
+                    renameMap.set(String(s.id), safeName);
+                }
             });
         }
 
@@ -202,7 +215,7 @@ namespace ts.refactor.inlineFunction {
             const symbol = checker.getSymbolAtLocation(name)!;
             if (nameIsTaken(symbols, name.text, symbol)) {
                 const safeName = createIdentifier(getUniqueName(name.text, file));
-                renameMap.set(String(symbol.id), safeName);
+                // renameMap.set(String(symbol.id), safeName);
                 return safeName;
             }
             return name;
