@@ -4827,5 +4827,21 @@
     "Convert to string concatenation": {
         "category": "Message",
         "code": 95080
+    },
+    "Convert arrow function or function expression": {
+        "category": "Message",
+        "code": 95081
+    },
+    "Convert to anonymous function": {
+        "category": "Message",
+        "code": 95082
+    },
+    "Convert to named function": {
+        "category": "Message",
+        "code": 95083
+    },
+    "Convert to arrow function": {
+        "category": "Message",
+        "code": 95084
     }
 }

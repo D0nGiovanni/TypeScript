@@ -86,6 +86,7 @@
         "refactors/moveToNewFile.ts",
         "refactors/addOrRemoveBracesToArrowFunction.ts",
         "refactors/convertStringOrTemplateLiteral.ts",
+        "refactors/convertArrowFunctionOrFunctionExpression.ts",
         "services.ts",
         "breakpoints.ts",
         "transform.ts",
