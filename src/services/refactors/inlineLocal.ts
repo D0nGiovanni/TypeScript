@@ -166,4 +166,17 @@ namespace ts.refactor.inlineLocal {
             checker.getSymbolAtLocation(n) === symbol &&
             (withDeclaration || !isDeclaration(n.parent))) as Identifier[];
     }
+
+    function findDescendants(node: Node, predicate: (n: Node) => boolean) {
+        const nodes: Node[] = [];
+        visitDescendants(node);
+
+        function visitDescendants(node: Node) {
+            forEachChild(node, n => {
+                if (predicate(n)) nodes.push(n);
+                visitDescendants(n);
+            });
+        }
+        return nodes;
+    }
 }
