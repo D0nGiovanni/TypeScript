@@ -4815,5 +4815,17 @@
     "Inline function": {
         "category": "Message",
         "code": 95077
+    },
+    "Convert string concatenation or template literal": {
+        "category": "Message",
+        "code": 95078
+    },
+    "Convert to template literal": {
+        "category": "Message",
+        "code": 95079
+    },
+    "Convert to string concatenation": {
+        "category": "Message",
+        "code": 95080
     }
 }
