@@ -145,8 +145,12 @@ namespace ts.refactor.inlineLocal {
     export function parenthesizeIfNecessary(target: Node, expression: Expression): Expression {
         const parent = target.parent;
         if (isBinaryExpression(parent)) {
+            const parentOperatorKind = parent.operatorToken.kind;
+            if (parentOperatorKind === SyntaxKind.AsteriskAsteriskToken && isUnaryExpression(expression)) {
+                return createParen(expression);
+            }
             return parenthesizeBinaryOperand(
-                parent.operatorToken.kind,
+                parentOperatorKind,
                 expression,
                 target === parent.left,
                 parent.left);
@@ -154,8 +158,12 @@ namespace ts.refactor.inlineLocal {
         if (isExpression(parent)) {
             const parentPrecedence = getExpressionPrecedence(parent);
             const expressionPrecedence = getExpressionPrecedence(expression);
-            if (parentPrecedence > expressionPrecedence) return createParen(expression);
-            else return expression;
+            if (parentPrecedence > expressionPrecedence) {
+                return createParen(expression);
+            }
+            else {
+                return expression;
+            }
         }
         return expression;
     }
