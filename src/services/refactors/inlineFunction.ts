@@ -145,8 +145,7 @@ namespace ts.refactor.inlineFunction {
     }
 
     function containsExportKeyword(modifiers?: NodeArray<Modifier>): boolean {
-        return !!modifiers && !!modifiers.find(mod =>
-            mod.kind === SyntaxKind.ExportKeyword);
+        return !!modifiers && !!find(modifiers, mod => mod.kind === SyntaxKind.ExportKeyword);
     }
 
     function getEditsForAction(context: RefactorContext, actionName: string): RefactorEditInfo | undefined {
