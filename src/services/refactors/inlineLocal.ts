@@ -51,14 +51,14 @@ namespace ts.refactor.inlineLocal {
             const symbol = checker.getSymbolAtLocation(token);
             if (!symbol) return undefined;
             const declaration = symbol.valueDeclaration;
-            if (!isLocalVariable(declaration)) return undefined;
+            if (!declaration || !isLocalVariable(declaration)) return undefined;
             return createInfo(checker, declaration, token);
         }
         return undefined;
     }
 
-    function isLocalVariable(parent: Node): parent is VariableDeclaration {
-        return isVariableDeclaration(parent) && isVariableDeclarationInVariableStatement(parent);
+    function isLocalVariable(node: Node): node is VariableDeclaration {
+        return isVariableDeclaration(node) && isVariableDeclarationInVariableStatement(node);
     }
 
     function createInfo(checker: TypeChecker, declaration: VariableDeclaration, token?: Identifier): Info | undefined {
