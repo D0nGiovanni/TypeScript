@@ -137,11 +137,6 @@ namespace ts.refactor.inlineLocal {
         });
     }
 
-    function makeIdUnique(node: Node): void {
-        node.id = undefined;
-        getNodeId(node);
-    }
-
     export function parenthesizeIfNecessary(target: Node, expression: Expression): Expression {
         const parent = target.parent;
         if (isBinaryExpression(parent)) {
