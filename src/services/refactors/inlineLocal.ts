@@ -102,7 +102,7 @@ namespace ts.refactor.inlineLocal {
             case inlineAllActionName:
                 return { edits: getInlineAllEdits(context, declaration, usages) };
             case inlineHereActionName:
-                return { edits: getInlineHereEdits(context, declaration, usages, selectedUsage!) };
+                return { edits: getInlineHereEdits(context, declaration, selectedUsage!) };
             default:
                 return Debug.fail("invalid action");
         }
@@ -116,24 +116,24 @@ namespace ts.refactor.inlineLocal {
         return textChanges.ChangeTracker.with(context, t => {
             forEach(usages, oldNode => {
                 const { initializer } = declaration;
-                makeIdUnique(initializer!); // since there is no node-copying function
-                const expression = parenthesizeIfNecessary(oldNode, initializer!);
+                const clone = getSynthesizedDeepClone(initializer!);
+                const expression = parenthesizeIfNecessary(oldNode, clone);
                 t.replaceNode(file, oldNode, expression);
             });
             t.delete(file, declaration);
         });
     }
 
-    function getInlineHereEdits(context: RefactorContext,
+    function getInlineHereEdits(
+        context: RefactorContext,
         declaration: VariableDeclaration,
-        usages: ReadonlyArray<Identifier>,
         selectedUsage: Identifier): FileTextChanges[] {
         const { file } = context;
         return textChanges.ChangeTracker.with(context, t => {
             const { initializer } = declaration;
-            const expression = parenthesizeIfNecessary(selectedUsage, initializer!);
+            const clone = getSynthesizedDeepClone(initializer!);
+            const expression = parenthesizeIfNecessary(selectedUsage, clone);
             t.replaceNode(file, selectedUsage, expression);
-            if (usages.length === 1) t.delete(file, declaration);
         });
     }
 
