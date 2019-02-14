@@ -51,8 +51,7 @@ namespace ts.refactor.inlineLocal {
             const symbol = checker.getSymbolAtLocation(token);
             if (!symbol) return undefined;
             const declaration = symbol.valueDeclaration;
-            if (!declaration) return undefined;
-            if (/* !declaration ||  */!isLocalVariable(declaration)) return undefined;
+            if (!declaration || !isLocalVariable(declaration)) return undefined;
             return createInfo(checker, declaration, token);
         }
         return undefined;
