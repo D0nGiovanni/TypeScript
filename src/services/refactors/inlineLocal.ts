@@ -90,7 +90,7 @@ namespace ts.refactor.inlineLocal {
     }
 
     function containsProhibitedModifiers(modifiers?: NodeArray<Modifier>): boolean {
-        return !!modifiers && !!modifiers.find(mod => mod.kind === SyntaxKind.ExportKeyword);
+        return !!modifiers && !!find(modifiers, mod => mod.kind === SyntaxKind.ExportKeyword);
     }
 
     function getEditsForAction(context: RefactorContext, actionName: string): RefactorEditInfo | undefined {
