@@ -44,7 +44,7 @@ namespace ts.refactor.inlineLocal {
         const token = getTokenAtPosition(file, startPosition);
         const maybeDeclaration = token.parent;
         const checker = program.getTypeChecker();
-        if (isLocalVariable(maybeDeclaration)) {
+        if (maybeDeclaration && isLocalVariable(maybeDeclaration)) {
             return createInfo(checker, maybeDeclaration);
         }
         if (isIdentifier(token)) {
