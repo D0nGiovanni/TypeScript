@@ -61,8 +61,8 @@ namespace ts.refactor.inlineLocal {
     }
 
     function createInfo(
-        checker: TypeChecker, 
-        declaration: VariableDeclaration, 
+        checker: TypeChecker,
+        declaration: VariableDeclaration,
         selectedUsage?: Identifier
     ): Info | undefined {
         const name = declaration.name;
