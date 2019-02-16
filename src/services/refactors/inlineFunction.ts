@@ -98,7 +98,7 @@ namespace ts.refactor.inlineFunction {
         declaration: InlineableFunction,
         call?: CallExpression
     ): Info | undefined {
-        const usages = getCallsInScope(
+        const usages = getCallsInFile(
             declaration.getSourceFile(),
             declaration,
             checker);
@@ -112,7 +112,7 @@ namespace ts.refactor.inlineFunction {
         };
     }
 
-    function getCallsInScope(
+    function getCallsInFile(
         file: SourceFile,
         target: InlineableFunction,
         checker: TypeChecker
