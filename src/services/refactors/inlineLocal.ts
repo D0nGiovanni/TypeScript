@@ -62,7 +62,7 @@ namespace ts.refactor.inlineLocal {
 
     function createInfo(checker: TypeChecker, declaration: VariableDeclaration, selectedUsage?: Identifier): Info | undefined {
         const name = declaration.name;
-        const usages = getReferencesInScope(getEnclosingBlockScopeContainer(name), name, checker, /* withDeclaration */ false);
+        const usages = getReferencesInScope(getEnclosingBlockScopeContainer(name), name, checker);
         return canInline(declaration, usages) ? {
             declaration,
             usages,
@@ -162,10 +162,10 @@ namespace ts.refactor.inlineLocal {
         return expression;
     }
 
-    function getReferencesInScope(scope: Node, target: Node, checker: TypeChecker, withDeclaration: boolean): ReadonlyArray<Identifier> {
+    function getReferencesInScope(scope: Node, target: Node, checker: TypeChecker): ReadonlyArray<Identifier> {
         const symbol = checker.getSymbolAtLocation(target);
         return findDescendants(scope, n =>
             checker.getSymbolAtLocation(n) === symbol &&
-            (withDeclaration || !isDeclaration(n.parent))) as Identifier[];
+            !isDeclaration(n.parent)) as Identifier[];
     }
 }
