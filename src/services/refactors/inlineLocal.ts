@@ -44,30 +44,29 @@ namespace ts.refactor.inlineLocal {
         const token = getTokenAtPosition(file, startPosition);
         const maybeDeclaration = token.parent;
         const checker = program.getTypeChecker();
-        if (maybeDeclaration && isLocalVariable(maybeDeclaration)) {
+        if (isLocalVariable(maybeDeclaration)) {
             return createInfo(checker, maybeDeclaration);
         }
         if (isIdentifier(token)) {
             const symbol = checker.getSymbolAtLocation(token);
             if (!symbol) return undefined;
             const declaration = symbol.valueDeclaration;
-            if (!declaration || !isLocalVariable(declaration)) return undefined;
+            if (!isLocalVariable(declaration)) return undefined;
             return createInfo(checker, declaration, token);
         }
-        return undefined;
     }
 
     function isLocalVariable(node: Node): node is VariableDeclaration {
-        return isVariableDeclaration(node) && isVariableDeclarationInVariableStatement(node);
+        return node && isVariableDeclaration(node) && isVariableDeclarationInVariableStatement(node);
     }
 
-    function createInfo(checker: TypeChecker, declaration: VariableDeclaration, token?: Identifier): Info | undefined {
+    function createInfo(checker: TypeChecker, declaration: VariableDeclaration, selectedUsage?: Identifier): Info | undefined {
         const name = declaration.name;
         const usages = getReferencesInScope(getEnclosingBlockScopeContainer(name), name, checker, /* withDeclaration */ false);
         return canInline(declaration, usages) ? {
             declaration,
             usages,
-            selectedUsage: token ? token : undefined
+            selectedUsage
         } : undefined;
     }
 
