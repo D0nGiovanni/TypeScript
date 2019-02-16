@@ -60,9 +60,13 @@ namespace ts.refactor.inlineLocal {
         return node && isVariableDeclaration(node) && isVariableDeclarationInVariableStatement(node);
     }
 
-    function createInfo(checker: TypeChecker, declaration: VariableDeclaration, selectedUsage?: Identifier): Info | undefined {
+    function createInfo(
+        checker: TypeChecker, 
+        declaration: VariableDeclaration, 
+        selectedUsage?: Identifier
+    ): Info | undefined {
         const name = declaration.name;
-        const usages = getReferencesInScope(getEnclosingBlockScopeContainer(name), name, checker);
+        const usages = getUsagesInScope(getEnclosingBlockScopeContainer(name), name, checker);
         return canInline(declaration, usages) ? {
             declaration,
             usages,
@@ -70,7 +74,7 @@ namespace ts.refactor.inlineLocal {
         } : undefined;
     }
 
-    function canInline(declaration: VariableDeclaration, usages: ReadonlyArray<Identifier>): boolean {
+    function canInline(declaration: VariableDeclaration, usages: ReadonlyArray<Identifier>) {
         let hasErrors = false;
         if (!declaration.initializer) hasErrors = true;
         if (containsProhibitedModifiers(declaration.parent.parent.modifiers)) hasErrors = true;
@@ -80,15 +84,12 @@ namespace ts.refactor.inlineLocal {
         return !hasErrors;
     }
 
-    function isAssigned(usage: Identifier): boolean {
-        type AssignExpr = AssignmentExpression<AssignmentOperatorToken>;
-        const assignment: AssignExpr = findAncestor(
-            usage,
-            ancestor => isAssignmentExpression(ancestor)) as AssignExpr;
+    function isAssigned(usage: Identifier) {
+        const assignment = findAncestor(usage, isAssignmentExpression)!;
         return assignment && assignment.left === usage;
     }
 
-    function containsProhibitedModifiers(modifiers?: NodeArray<Modifier>): boolean {
+    function containsProhibitedModifiers(modifiers?: NodeArray<Modifier>) {
         return !!modifiers && !!find(modifiers, mod => mod.kind === SyntaxKind.ExportKeyword);
     }
 
@@ -162,7 +163,7 @@ namespace ts.refactor.inlineLocal {
         return expression;
     }
 
-    function getReferencesInScope(scope: Node, target: Node, checker: TypeChecker): ReadonlyArray<Identifier> {
+    function getUsagesInScope(scope: Node, target: Node, checker: TypeChecker): ReadonlyArray<Identifier> {
         const symbol = checker.getSymbolAtLocation(target);
         return findDescendants(scope, n =>
             checker.getSymbolAtLocation(n) === symbol &&
