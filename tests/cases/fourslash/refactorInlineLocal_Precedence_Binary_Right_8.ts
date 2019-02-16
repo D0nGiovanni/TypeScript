@@ -8,5 +8,5 @@ edit.applyRefactor({
     refactorName: "Inline local",
     actionName: "Inline all",
     actionDescription: "Inline all",
-    newContent: `const b = 9 ** -3;`
+    newContent: `const b = 9 ** (-3);`
 });
