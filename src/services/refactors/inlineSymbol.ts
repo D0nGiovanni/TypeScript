@@ -1,16 +1,171 @@
 /* @internal */
-namespace ts.refactor.inlineFunction {
+namespace ts.refactor.inlineSymbol {
+  const refactorName = "Inline symbol";
+
+  const inlineHereActionName = "Inline here";
+  const inlineAllActionName = "Inline all";
+
+  const inlineHereActionDescription = getLocaleSpecificMessage(Diagnostics.Inline_here);
+  const inlineAllActionDescription = getLocaleSpecificMessage(Diagnostics.Inline_all);
+
+  registerRefactor(refactorName, { getEditsForAction, getAvailableActions });
+
+  function getAvailableActions(context: RefactorContext): ReadonlyArray<ApplicableRefactorInfo> {
+    const refactorInfo = [
+      ...inlineLocal.getAvailableActions(context),
+      ...inlineFunction.getAvailableActions(context),
+    ];
+    return refactorInfo;
+  }
+
+  function getEditsForAction(context: RefactorContext, actionName: string) {
+    const edits = inlineLocal.getEditsForAction(context, actionName);
+    if (edits) {
+      return edits;
+    }
+    return inlineFunction.getEditsForAction(context, actionName);
+  }
+
+  namespace inlineLocal {
+    const refactorName = "Inline local";
+    const refactorDescription = getLocaleSpecificMessage(Diagnostics.Inline_local);
+
+    interface Info {
+        readonly declaration: VariableDeclaration;
+        readonly usages: ReadonlyArray<Identifier>;
+        readonly selectedUsage: Identifier | undefined;
+    }
+
+    export function getAvailableActions(context: RefactorContext): ReadonlyArray<ApplicableRefactorInfo> {
+        const { file, program, startPosition } = context;
+        const info = getLocalInfo(file, program, startPosition);
+        if (!info) return emptyArray;
+        const { selectedUsage } = info;
+        const refactorInfo = {
+            name: refactorName,
+            description: refactorDescription,
+            actions: [{
+                name: inlineAllActionName,
+                description: inlineAllActionDescription
+            }]
+        };
+        if (selectedUsage) {
+            refactorInfo.actions.push({
+                name: inlineHereActionName,
+                description: inlineHereActionDescription
+            });
+        }
+        return [refactorInfo];
+    }
+
+    function getLocalInfo(file: SourceFile, program: Program, startPosition: number): Info | undefined {
+        const token = getTokenAtPosition(file, startPosition);
+        const maybeDeclaration = token.parent;
+        const checker = program.getTypeChecker();
+        if (isLocalVariable(maybeDeclaration)) {
+            return createInfo(checker, maybeDeclaration);
+        }
+        if (isIdentifier(token)) {
+            const symbol = checker.getSymbolAtLocation(token);
+            if (!symbol) return undefined;
+            const declaration = symbol.valueDeclaration;
+            if (!isLocalVariable(declaration)) return undefined;
+            return createInfo(checker, declaration, token);
+        }
+    }
+
+    function isLocalVariable(node: Node): node is VariableDeclaration {
+        return node && isVariableDeclaration(node) && isVariableDeclarationInVariableStatement(node);
+    }
+
+    function createInfo(
+        checker: TypeChecker,
+        declaration: VariableDeclaration,
+        selectedUsage?: Identifier
+    ): Info | undefined {
+        const name = declaration.name;
+        const usages = getUsagesInScope(getEnclosingBlockScopeContainer(name), name, checker);
+        return canInline(declaration, usages) ? {
+            declaration,
+            usages,
+            selectedUsage
+        } : undefined;
+    }
+
+    function canInline(declaration: VariableDeclaration, usages: ReadonlyArray<Identifier>) {
+        let hasErrors = false;
+        if (!declaration.initializer) hasErrors = true;
+        if (containsProhibitedModifiers(declaration.parent.parent.modifiers)) hasErrors = true;
+        forEach(usages, usage => {
+            if (isAssigned(usage)) hasErrors = true;
+        });
+        return !hasErrors;
+    }
+
+    function isAssigned(usage: Identifier) {
+        const assignment = findAncestor(usage, isAssignmentExpression)!;
+        return assignment && assignment.left === usage;
+    }
+
+    function containsProhibitedModifiers(modifiers?: NodeArray<Modifier>) {
+        return !!modifiers && !!find(modifiers, mod => mod.kind === SyntaxKind.ExportKeyword);
+    }
+
+    export function getEditsForAction(context: RefactorContext, actionName: string): RefactorEditInfo | undefined {
+        const { file, program, startPosition } = context;
+        const info = getLocalInfo(file, program, startPosition);
+        if (!info) return undefined;
+        const { declaration, usages, selectedUsage } = info;
+        switch (actionName) {
+            case inlineAllActionName:
+                return { edits: getInlineAllEdits(context, declaration, usages) };
+            case inlineHereActionName:
+                return { edits: getInlineHereEdits(context, declaration, selectedUsage!) };
+            default:
+                return Debug.fail("invalid action");
+        }
+    }
+
+    function getInlineAllEdits(
+        context: RefactorContext,
+        declaration: VariableDeclaration,
+        usages: ReadonlyArray<Identifier>): FileTextChanges[] {
+        const { file } = context;
+        return textChanges.ChangeTracker.with(context, t => {
+            forEach(usages, oldNode => {
+                const { initializer } = declaration;
+                const clone = getSynthesizedDeepClone(initializer!);
+                const expression = parenthesizeIfNecessary(oldNode, clone);
+                t.replaceNode(file, oldNode, expression);
+            });
+            t.delete(file, declaration);
+        });
+    }
+
+    function getInlineHereEdits(
+        context: RefactorContext,
+        declaration: VariableDeclaration,
+        selectedUsage: Identifier): FileTextChanges[] {
+        const { file } = context;
+        return textChanges.ChangeTracker.with(context, t => {
+            const { initializer } = declaration;
+            const clone = getSynthesizedDeepClone(initializer!);
+            const expression = parenthesizeIfNecessary(selectedUsage, clone);
+            t.replaceNode(file, selectedUsage, expression);
+        });
+    }
+
+    function getUsagesInScope(scope: Node, target: Node, checker: TypeChecker): ReadonlyArray<Identifier> {
+        const symbol = checker.getSymbolAtLocation(target);
+        return findDescendants(scope, n =>
+            checker.getSymbolAtLocation(n) === symbol &&
+            !isDeclaration(n.parent)) as Identifier[];
+    }
+  }
+
+  namespace inlineFunction {
     const refactorName = "Inline function";
     const refactorDescription = getLocaleSpecificMessage(Diagnostics.Inline_function);
-
-    const inlineHereActionName = "Inline here";
-    const inlineAllActionName = "Inline all";
-
-    const inlineHereActionDescription = getLocaleSpecificMessage(Diagnostics.Inline_here);
-    const inlineAllActionDescription = getLocaleSpecificMessage(Diagnostics.Inline_all);
-
-
-    registerRefactor(refactorName, { getEditsForAction, getAvailableActions });
 
     type InlineableFunction = FunctionDeclaration | MethodDeclaration;
 
@@ -22,7 +177,7 @@ namespace ts.refactor.inlineFunction {
         readonly selectedAvailable: boolean;
     }
 
-    function getAvailableActions(context: RefactorContext): ReadonlyArray<ApplicableRefactorInfo> {
+    export function getAvailableActions(context: RefactorContext): ReadonlyArray<ApplicableRefactorInfo> {
         const { program, file, startPosition } = context;
         const info = getInfo(program, file, startPosition);
         if (!info) return emptyArray;
@@ -148,7 +303,7 @@ namespace ts.refactor.inlineFunction {
         return !!modifiers && !!find(modifiers, mod => mod.kind === SyntaxKind.ExportKeyword);
     }
 
-    function getEditsForAction(context: RefactorContext, actionName: string): RefactorEditInfo | undefined {
+    export function getEditsForAction(context: RefactorContext, actionName: string): RefactorEditInfo | undefined {
         const { file, program, startPosition } = context;
         const info = getInfo(program, file, startPosition);
         if (!info) return undefined;
@@ -280,7 +435,7 @@ namespace ts.refactor.inlineFunction {
     ) {
         if (nofReturns === 1 && !isVoid) {
             const returnExpression = forEachReturnStatement(transformedBody, r => r.expression)!;
-            return inlineLocal.parenthesizeIfNecessary(targetNode, returnExpression);
+            return parenthesizeIfNecessary(targetNode, returnExpression);
         }
         else if (nofReturns > 1 && !isVoid) {
             return createReturnVariableName(file);
@@ -379,4 +534,31 @@ namespace ts.refactor.inlineFunction {
     function isInlineableFunction(node: Node): node is InlineableFunction {
         return isFunctionDeclaration(node) || isMethodDeclaration(node);
     }
+  }
+
+  function parenthesizeIfNecessary(target: Node, expression: Expression): Expression {
+    const parent = target.parent;
+    if (isBinaryExpression(parent)) {
+        const parentOperatorKind = parent.operatorToken.kind;
+        if (parentOperatorKind === SyntaxKind.AsteriskAsteriskToken && isUnaryExpression(expression)) {
+            return createParen(expression);
+        }
+        return parenthesizeBinaryOperand(
+            parentOperatorKind,
+            expression,
+            target === parent.left,
+            parent.left);
+    }
+    if (isExpression(parent)) {
+        const parentPrecedence = getExpressionPrecedence(parent);
+        const expressionPrecedence = getExpressionPrecedence(expression);
+        if (parentPrecedence > expressionPrecedence) {
+            return createParen(expression);
+        }
+        else {
+            return expression;
+        }
+    }
+    return expression;
+  }
 }
