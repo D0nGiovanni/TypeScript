@@ -19,11 +19,7 @@ namespace ts.refactor.inlineSymbol {
   }
 
   function getEditsForAction(context: RefactorContext, actionName: string) {
-    const edits = inlineLocal.getEditsForAction(context, actionName);
-    if (edits) {
-      return edits;
-    }
-    return inlineFunction.getEditsForAction(context, actionName);
+    return inlineLocal.getEditsForAction(context, actionName) || inlineFunction.getEditsForAction(context, actionName);
   }
 
   namespace inlineLocal {
