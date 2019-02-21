@@ -1,29 +1,13 @@
 /* @internal */
 namespace ts.refactor.inlineSymbol {
-  const refactorName = "Inline symbol";
-
   const inlineHereActionName = "Inline here";
   const inlineAllActionName = "Inline all";
 
   const inlineHereActionDescription = getLocaleSpecificMessage(Diagnostics.Inline_here);
   const inlineAllActionDescription = getLocaleSpecificMessage(Diagnostics.Inline_all);
 
-  registerRefactor(refactorName, { getEditsForAction, getAvailableActions });
-
-  function getAvailableActions(context: RefactorContext): ReadonlyArray<ApplicableRefactorInfo> {
-    const refactorInfo = [
-      ...inlineLocal.getAvailableActions(context),
-      ...inlineFunction.getAvailableActions(context),
-    ];
-    return refactorInfo;
-  }
-
-  function getEditsForAction(context: RefactorContext, actionName: string) {
-    return inlineLocal.getEditsForAction(context, actionName) || inlineFunction.getEditsForAction(context, actionName);
-  }
-
   namespace inlineLocal {
-    const refactorName = "Inline local";
+    export const refactorName = "Inline local";
     const refactorDescription = getLocaleSpecificMessage(Diagnostics.Inline_local);
 
     interface Info {
@@ -160,7 +144,7 @@ namespace ts.refactor.inlineSymbol {
   }
 
   namespace inlineFunction {
-    const refactorName = "Inline function";
+    export const refactorName = "Inline function";
     const refactorDescription = getLocaleSpecificMessage(Diagnostics.Inline_function);
 
     type InlineableFunction = FunctionDeclaration | MethodDeclaration;
@@ -531,6 +515,9 @@ namespace ts.refactor.inlineSymbol {
         return isFunctionDeclaration(node) || isMethodDeclaration(node);
     }
   }
+
+  registerRefactor(inlineLocal.refactorName, { getEditsForAction: inlineLocal.getEditsForAction, getAvailableActions: inlineLocal.getAvailableActions });
+  registerRefactor(inlineFunction.refactorName, { getEditsForAction: inlineFunction.getEditsForAction, getAvailableActions: inlineFunction.getAvailableActions });
 
   function parenthesizeIfNecessary(target: Node, expression: Expression): Expression {
     const parent = target.parent;
